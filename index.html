@@ -1,0 +1,474 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  Search, MapPin, Phone, Clock, FileText, 
+  Info, ExternalLink, MessageCircle, School, 
+  Filter, CheckCircle, GraduationCap
+} from 'lucide-react';
+
+// Data extracted from the PDF
+const schoolsData = [
+  // البلدة القديمة
+  {
+    id: 1,
+    name: "مدرسة الوفاق الأساسية المختلطة",
+    area: "البلدة القديمة",
+    location: "حارة النصارى",
+    seats: "الصف الأول - الرابع",
+    registration: "الأحد - الخميس | 9:00 - 12:30",
+    phones: ["0532351612", "026264114"],
+    links: ["https://www.facebook.com/share/r/IDRA4hRVUY/?mibextid=wwXIfr"],
+    isPrivate: false
+  },
+  {
+    id: 2,
+    name: "مدرسة ذكور الهدى الأساسية",
+    area: "البلدة القديمة",
+    location: "حي النصارى - باب الجديد ( قرب الفرير )",
+    seats: "الصف الأول - الرابع",
+    registration: "الأحد - الخميس | 8:00 - 12:00",
+    phones: ["0523178430", "0598748873", "026276018"],
+    isPrivate: false
+  },
+  {
+    id: 3,
+    name: "مدرسة دار الأيتام الإسلامية الثانوية المهنية",
+    area: "البلدة القديمة",
+    location: "البلدة القديمة - عقبة السرايا",
+    seats: "العاشر (مهني) - الحادي عشر والثاني عشر (صناعي) - تخصص كهرباء استعمال - تخصص تكييف وتبريد",
+    phones: ["0525139518"],
+    isPrivate: false
+  },
+  {
+    id: 4,
+    name: "مدرسة الفرير",
+    area: "البلدة القديمة",
+    location: "باب الجديد",
+    seats: "الصف الاول - الثاني عشر",
+    registration: "إلكترونياً عبر الرابط",
+    links: ["https://docs.google.com/forms/d/e/1FAIpQLSfsJsyl8pRUI9eeOVW59xfMqffvozmyWl98xX0X20LqdywPvQ/viewform"],
+    notes: "منح دراسية كاملة للقسم الفندقي - الصف العاشر والحادي عشر (معدل 80%)",
+    isPrivate: true
+  },
+  {
+    id: 5,
+    name: "مدارس ورياض الأقصى الإسلامية",
+    area: "البلدة القديمة",
+    location: "حارة السعدية - المئذنة الحمراء",
+    seats: "إناث: التمهيدي - الصف التاسع | ذكور: التمهيدي - الصف العاشر",
+    registration: "مراجعة مقر الإدارة العامة وتعبئة النماذج",
+    phones: ["026288510"],
+    isPrivate: true
+  },
+  // وادى الجوز / الشيخ جراح / شارع الزهراء / شارع نابلس
+  {
+    id: 6,
+    name: "مدرسة الفتاة الثانوية الشاملة",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "شارع الحريري 33 - بجانب الاتحاد النسائي",
+    seats: "الصف السادس - الثاني عشر",
+    registration: "الأحد - الخميس | 7:00 - 1:30 (داخل المدرسة)",
+    docs: "شهادة الفصل الأول الأصلية + شهادة ميلاد + هوية الوالدين",
+    notes: "شرط الحادي عشر العلمي : معدل 85 % فما فوق",
+    isPrivate: false
+  },
+  {
+    id: 7,
+    name: "مدرسة الفتاة اللاجئة الأساسية",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "شارع الزهراء - مقابل حديقة روكفلر - مقابل مسجد الزهراء",
+    seats: "الصف الأول - الرابع",
+    docs: "شهادة مدرسية أصلية + شهادة ميلاد + هويات الوالدين",
+    phones: ["026282656"],
+    isPrivate: false
+  },
+  {
+    id: 8,
+    name: "مدرسة ذكور إيلياء الأساسية",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "القدس - شارع نابلس - مقابل مدرسة المطران",
+    seats: "التمهيدي (مختلط) الصف الأول - السادس للذكور",
+    notes: "الصف الخامس مغلق",
+    phones: ["025829328"],
+    links: ["https://www.facebook.com/share/18SMurD7zv/?mibextid=wwXIfr"],
+    isPrivate: false
+  },
+  {
+    id: 9,
+    name: "مدرسة بنات وادى الجوز الأساسية",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "وادي الجوز - بالقرب من مسجد عابدين",
+    seats: "التمهيدي - الصف التاسع",
+    registration: "الأحد - الخميس | 8:00 - 12:00 (داخل المدرسة)",
+    docs: "شهادة الميلاد الأصلية + آخر شهادة مدرسية + هوية الأب والأم",
+    isPrivate: false
+  },
+  {
+    id: 10,
+    name: "مدرسة بنات الدوحة الأساسية",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "وادي الجوز - شارع المدارس",
+    seats: "الصف الأول - الخامس",
+    registration: "الأحد - الخميس (داخل المدرسة)",
+    phones: ["026263163"],
+    isPrivate: false
+  },
+  {
+    id: 11,
+    name: "مدرسة بنات الروضة الحديثة الثانوية",
+    area: "وادى الجوز / الشيخ جراح",
+    location: "الشيخ جراح",
+    seats: "الصف الأول - الثاني عشر",
+    phones: ["02588388"],
+    whatsapp: ["0542977655"],
+    links: ["https://www.facebook.com/share/p/17FVFajjms/"],
+    isPrivate: false
+  },
+  // بيت حنينا
+  {
+    id: 12,
+    name: "مدرسة ذكور طلائع القدس",
+    area: "بيت حنينا",
+    location: "حي العقبة",
+    seats: "الصف السابع - الثاني عشر (العاشر: أكاديمي/مهني، الحادي عشر والثاني عشر: علمي، أدبي، مهني)",
+    phones: ["026561429"],
+    isPrivate: false
+  },
+  {
+    id: 13,
+    name: "روضة شذى الورد ومدرسة أكاديمية النجاح",
+    area: "بيت حنينا",
+    location: "بجانب سوبر ماركت المقدسي دوار أبو عيشة",
+    seats: "الروضة: أعمار 3 - 5 سنوات | الصف الأول - الثامن",
+    registration: "الأحد - الخميس | 9:00 - 12:30 (حضور شخصي)",
+    docs: "هوية الأب أو الأم + شهادة ميلاد + آخر شهادة دراسية + تقرير طبي + حضور الطالب",
+    links: ["https://www.facebook.com/share/p/1E7mSK6KMX/?mibextid=wwXIf"],
+    isPrivate: true
+  },
+  {
+    id: 14,
+    name: "روضة ومدرسة الحصاد النموذجية",
+    area: "بيت حنينا",
+    location: "ضاحية المعلمين، شارع الإمام الشافعي",
+    seats: "من البستان حتى الصف الثاني عشر (بفرعيه)",
+    registration: "إلكترونياً - يُغلق عند اكتمال الأعداد",
+    docs: "شهادة ميلاد أصلية + هوية الطالب + تقرير طبي + 4 صور شخصية + شهادة نهاية العام + شهادة الفصل الأول + هويات الوالدين",
+    notes: "تحديد موعد المقابلة مرتبط بدقة البيانات المدخلة",
+    links: ["https://forms.gle/o1ck98Q3wRNKfmDTA"],
+    isPrivate: true
+  },
+  // شعفاط / عناتا
+  {
+    id: 15,
+    name: "مدرسة وروضة الفرقان",
+    area: "شعفاط / عناتا",
+    location: "شارع عناتا رقم 1",
+    seats: "الروضة: أعمار 3 - 5 سنوات | الصف الأول - الثاني عشر (ذكور وإناث)",
+    phones: ["0522997516", "0505215266"],
+    whatsapp: ["0569298185"],
+    isPrivate: true
+  },
+  {
+    id: 16,
+    name: "مدرسة بنات المسيرة الثانوية",
+    area: "شعفاط / عناتا",
+    location: "مخيم شعفاط مقابل جامع أبو عبيدة",
+    seats: "من الصف الخامس - الثاني عشر (للفروع الاكاديمية والمهنية)",
+    registration: "الأحد - الخميس | 8:00 - 1:00",
+    phones: ["0523828748"],
+    isPrivate: false
+  },
+  // الرام - ضاحية البريد
+  {
+    id: 17,
+    name: "مدرسة بنات الأقصى الأساسية",
+    area: "الرام - ضاحية البريد",
+    location: "ضاحية البريد",
+    seats: "الصف الخامس - الحادي عشر (العاشر والحادي عشر مهني)",
+    docs: "شهادة ميلاد + شهادة الفصل الأول + صورة هوية الوالدين + صورة شخصية للطالبة",
+    phones: ["0562502238"],
+    isPrivate: false
+  },
+  // صور باهر - ام طوبا
+  {
+    id: 18,
+    name: "مدرسة بنات أبو بكر الصديق الثانوية",
+    area: "صور باهر - ام طوبا",
+    location: "شارع النعمان، مبنى رقم 2",
+    seats: "الصف التاسع - الثاني عشر (أكاديمي: علمي، أدبي، ريادة أعمال | مهني: صناعي، تصميم جرافيك، اقتصاد منزلي / تجميل)",
+    registration: "الأحد - الخميس | 8:00 - 1:00 (داخل المدرسة)",
+    docs: "شهادة مدرسية + شهادة ميلاد + هويات",
+    notes: "استقبال طالبات البجروت + معادلة شهادات متوفرة",
+    phones: ["026730145"],
+    isPrivate: false
+  },
+  {
+    id: 19,
+    name: "مدرسة ذكور ام طوبا الثانوية",
+    area: "صور باهر - ام طوبا",
+    location: "القدس - ام طوبا",
+    seats: "الأساسية: 8، 9 | العاشر (أكاديمي ومهني) | الحادي عشر (أدبي ومهني) | الثاني عشر (أدبي)",
+    phones: ["0529396537"],
+    isPrivate: false
+  },
+  // راس العامود
+  {
+    id: 20,
+    name: "مدرسة صلاح الدين الأساسية المختلطة",
+    area: "راس العامود",
+    location: "طريق بيت لحم القديم - بجانب مخبز سكر",
+    seats: "الصف الأول - السادس",
+    registration: "الأحد - الخميس (داخل المدرسة)",
+    links: ["https://www.facebook.com/share/IKR9e6X7/"],
+    isPrivate: false
+  }
+];
+
+const Header = () => (
+  <header className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white shadow-lg">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col items-center justify-center text-center space-y-4">
+        <div className="bg-white/20 p-4 rounded-full backdrop-blur-sm">
+          <GraduationCap size={48} className="text-white" />
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold leading-tight">
+          مدارس القدس - التسجيل 2026/2027
+        </h1>
+        <p className="text-lg text-teal-50 max-w-2xl">
+          دليل التسجيل الشامل للمدارس التي يتوفر فيها مقاعد للعام الدراسي القادم في مدينة القدس.
+        </p>
+      </div>
+    </div>
+  </header>
+);
+
+const SchoolCard = ({ school }) => {
+  return (
+    <div className={`rounded-2xl shadow-sm border transition-all duration-300 hover:shadow-xl overflow-hidden flex flex-col h-full ${school.isPrivate ? 'bg-gray-100 border-gray-300' : 'bg-white border-emerald-100'}`}>
+      
+      {/* Header */}
+      <div className={`p-5 border-b ${school.isPrivate ? 'border-gray-200' : 'border-emerald-50'} flex justify-between items-start gap-4`}>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${school.isPrivate ? 'bg-gray-700 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+              {school.isPrivate ? 'مدرسة خاصة' : 'مدرسة عامة'}
+            </span>
+            <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-50 text-blue-700 flex items-center gap-1">
+              <MapPin size={12} />
+              {school.area}
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 leading-tight">
+            {school.name}
+          </h3>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-5 flex-1 flex flex-col gap-4 text-sm">
+        
+        {school.location && (
+          <div className="flex items-start gap-3 text-gray-600">
+            <MapPin size={18} className="mt-0.5 text-gray-400 shrink-0" />
+            <div>
+              <strong className="block text-gray-800 font-medium mb-0.5">الموقع</strong>
+              {school.location}
+            </div>
+          </div>
+        )}
+
+        {school.seats && (
+          <div className="flex items-start gap-3 text-gray-600">
+            <CheckCircle size={18} className="mt-0.5 text-emerald-500 shrink-0" />
+            <div>
+              <strong className="block text-gray-800 font-medium mb-0.5">المقاعد المتاحة</strong>
+              {school.seats}
+            </div>
+          </div>
+        )}
+
+        {school.registration && (
+          <div className="flex items-start gap-3 text-gray-600">
+            <Clock size={18} className="mt-0.5 text-blue-500 shrink-0" />
+            <div>
+              <strong className="block text-gray-800 font-medium mb-0.5">أوقات وآلية التسجيل</strong>
+              {school.registration}
+            </div>
+          </div>
+        )}
+
+        {school.docs && (
+          <div className="flex items-start gap-3 text-gray-600">
+            <FileText size={18} className="mt-0.5 text-orange-400 shrink-0" />
+            <div>
+              <strong className="block text-gray-800 font-medium mb-0.5">الوثائق المطلوبة</strong>
+              {school.docs}
+            </div>
+          </div>
+        )}
+
+        {school.notes && (
+          <div className="flex items-start gap-3 text-gray-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+            <Info size={18} className="mt-0.5 text-yellow-600 shrink-0" />
+            <div>
+              <strong className="block text-yellow-800 font-medium mb-0.5">ملاحظة هامة</strong>
+              <span className="text-yellow-700">{school.notes}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer / Contacts */}
+      <div className={`p-4 mt-auto border-t flex flex-wrap gap-2 ${school.isPrivate ? 'bg-gray-200/50 border-gray-200' : 'bg-gray-50 border-gray-100'}`}>
+        {school.phones && school.phones.map((phone, idx) => (
+          <a key={idx} href={`tel:${phone}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 hover:text-emerald-600 transition-colors">
+            <Phone size={14} />
+            <span dir="ltr">{phone}</span>
+          </a>
+        ))}
+        
+        {school.whatsapp && school.whatsapp.map((wa, idx) => (
+          <a key={idx} href={`https://wa.me/972${wa.substring(1)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/10 text-[#075E54] border border-[#25D366]/20 rounded-lg text-sm hover:bg-[#25D366] hover:text-white transition-colors">
+            <MessageCircle size={14} />
+            واتساب
+          </a>
+        ))}
+
+        {school.links && school.links.map((link, idx) => (
+          <a key={idx} href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm hover:bg-blue-600 hover:text-white transition-colors">
+            <ExternalLink size={14} />
+            رابط التسجيل / الصفحة
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedArea, setSelectedArea] = useState('الكل');
+  const [filterPrivate, setFilterPrivate] = useState('all'); // 'all', 'private', 'public'
+
+  // Extract unique areas
+  const areas = useMemo(() => {
+    const uniqueAreas = new Set(schoolsData.map(school => school.area));
+    return ['الكل', ...Array.from(uniqueAreas)];
+  }, []);
+
+  // Filter logic
+  const filteredSchools = useMemo(() => {
+    return schoolsData.filter(school => {
+      const matchesSearch = school.name.includes(searchTerm) || 
+                            school.area.includes(searchTerm) || 
+                            (school.location && school.location.includes(searchTerm));
+      
+      const matchesArea = selectedArea === 'الكل' || school.area === selectedArea;
+      
+      const matchesType = filterPrivate === 'all' 
+                          ? true 
+                          : filterPrivate === 'private' ? school.isPrivate : !school.isPrivate;
+
+      return matchesSearch && matchesArea && matchesType;
+    });
+  }, [searchTerm, selectedArea, filterPrivate]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans selection:bg-emerald-200" dir="rtl">
+      <Header />
+
+      <main className="container mx-auto px-4 py-8 -mt-8 relative z-10">
+        
+        {/* Filters Section */}
+        <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100 mb-8 flex flex-col md:flex-row gap-4">
+          
+          {/* Search */}
+          <div className="flex-1 relative">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-3 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all"
+              placeholder="ابحث عن مدرسة، عنوان..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Area Filter */}
+          <div className="w-full md:w-64 relative">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <MapPin className="h-5 w-5 text-gray-400" />
+            </div>
+            <select
+              className="block w-full pl-3 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all appearance-none cursor-pointer"
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+            >
+              {areas.map(area => (
+                <option key={area} value={area}>{area === 'الكل' ? 'كل المناطق' : area}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Type Filter */}
+          <div className="w-full md:w-48 relative">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <School className="h-5 w-5 text-gray-400" />
+            </div>
+            <select
+              className="block w-full pl-3 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all appearance-none cursor-pointer"
+              value={filterPrivate}
+              onChange={(e) => setFilterPrivate(e.target.value)}
+            >
+              <option value="all">كل المدارس</option>
+              <option value="public">المدارس العامة</option>
+              <option value="private">المدارس الخاصة</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Results Info */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-800">
+            النتائج ({filteredSchools.length})
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="inline-block w-3 h-3 bg-gray-200 rounded-full"></span> المدارس الخاصة
+          </div>
+        </div>
+
+        {/* Grid */}
+        {filteredSchools.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredSchools.map(school => (
+              <SchoolCard key={school.id} school={school} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Filter className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">لا توجد نتائج</h3>
+            <p className="text-gray-500">حاول تغيير كلمات البحث أو الفلاتر للعثور على المدرسة المطلوبة.</p>
+            <button 
+              onClick={() => { setSearchTerm(''); setSelectedArea('الكل'); setFilterPrivate('all'); }}
+              className="mt-4 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg font-medium hover:bg-emerald-100 transition-colors"
+            >
+              مسح الفلاتر
+            </button>
+          </div>
+        )}
+
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-12 py-8 text-center text-gray-500 text-sm">
+        <div className="container mx-auto px-4">
+          <p>جميع البيانات المعروضة مأخوذة من وثيقة المدارس لعام 2026-2027.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
